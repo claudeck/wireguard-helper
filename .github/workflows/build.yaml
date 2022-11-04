@@ -21,3 +21,11 @@ jobs:
         with:
           name: wireguard-helper
           path: app/build/outputs/apk/release/wireguard-helper-*-release-unsigned.apk
+      - uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.TOKEN }}"
+          automatic_release_tag: "latest"
+          prerelease: true
+          title: "Development Build"
+          files: |
+            app/build/outputs/apk/release/wireguard-helper-*-release-unsigned.apk

@@ -39,7 +39,7 @@ class MainActivity : AppCompatActivity() {
 
         wgEnableSwitch.setOnCheckedChangeListener { buttonView, isChecked ->
             if (isChecked && wgNameInput.text.toString() == "") {
-                Toast.makeText(this, "请输入Wireguard Name，然后在激活服务", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.input_wg_name_before_switch), Toast.LENGTH_SHORT).show()
                 buttonView.isChecked = false
             }
 

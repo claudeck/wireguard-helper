@@ -1,0 +1,23 @@
+<resources>
+    <string name="app_name">WG Helper</string>
+    <string name="readme" ><![CDATA[
+<h1>Read me</h1>
+<ol>
+<li>For get Wifi SSID, Please grant "Allowed all the time" for App location permissions.
+</li>
+<li>Grant WireGuard permission by adb on Desktop/Laptop.
+<br/>
+<font color="red">
+adb shell pm grant com.claudejiang.wghelper com.wireguard.android.permission.CONTROL_TUNNELS
+</font>
+</li>
+</ol>
+]]></string>
+    <string name="wg_name">WG Name</string>
+    <string name="input_wireguard_name">Input WireGuard name</string>
+    <string name="ssids">SSIDs</string>
+    <string name="ssids_input_hint">Input wifi ssids, split by comma</string>
+    <string name="wg_name_desc">The WireGuard name configured in WireGuard App</string>
+    <string name="ssid_input_desc">If connected to wifi with these ssids, will turn off WireGuard</string>
+    <string name="switch_desc">Enable/Disable WG Helper</string>
+</resources>

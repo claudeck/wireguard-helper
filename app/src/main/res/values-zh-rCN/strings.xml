@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Wireguard助手</string>
+    <string name="readme" ><![CDATA[
+<h1>使用说明</h1>
+本App实现了WireGuard iOS的on-demand功能。当使用Wifi时，自动关闭WireGuard；使用手机数据时，自动开启WireGuard。
+<ol>
+    <li>为了避免后台服务被关掉，请到应用信息设置界面，开启App的<b>"自启动"</b>权限；并将省电模式设置成<b>"无限制"</b></li>
+    <li>为了获取Wifi SSID，请到App权限设置页面，将定位权限设置成为<b>"始终使用"。</b></li>
+    <li>在电脑上通过adb给App分配Wireguard的权限。<br/>
+    <font color="red">
+    adb shell pm grant com.claudejiang.wghelper com.wireguard.android.permission.CONTROL_TUNNELS
+    </font>
+    </li>
+</ol>
+]]></string>
+    <string name="wg_name">WG名称</string>
+    <string name="input_wireguard_name">请输入WireGuard名称</string>
+    <string name="ssids">SSIDs</string>
+    <string name="ssids_input_hint">输入SSID，多个可以用,分割</string>
+    <string name="wg_name_desc">配置在WireGuard android app中配置的接口名称</string>
+    <string name="ssid_input_desc">如果连接的wifi包含这里面定义的ssid，则会关闭WireGuard VPN。如果为空，则连接到所有Wifi都自动断开WireGuard</string>
+    <string name="switch_desc">启用/停用WireGuard助手</string>
+</resources>

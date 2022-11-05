@@ -28,4 +28,5 @@
     <string name="turn_on_wireguard_content">检查到当前使用手机网络，立刻帮你开启WireGuard.</string>
     <string name="turn_off_wireguard_content">检查到当前使用Wifi，立刻帮你关闭WireGuard.</string>
     <string name="input_wg_name_before_switch">请输入WireGuard Name，然后在激活服务</string>
+    <string name="notificationSwitch">开启/停用通知</string>
 </resources>

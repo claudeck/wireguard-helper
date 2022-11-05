@@ -31,11 +31,13 @@ class AutoSwitchWireguardService : Service() {
                 }
 
                 val cap = cm.getNetworkCapabilities(cm.activeNetwork)
+                val prefs = getSharedPreferences("config", Context.MODE_PRIVATE)
+                val notificationEnable = prefs.getBoolean("notificationEnable", false)
 
                 if (cap != null) {
                     if (cap.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
                         val result = turnOnWireGuard()
-                        if (result) {
+                        if (notificationEnable && result) {
                             NotificationHelper.notify(
                                 getString(R.string.turn_on_wireguard_title),
                                 getString(R.string.turn_on_wireguard_scheduled_content),
@@ -45,7 +47,7 @@ class AutoSwitchWireguardService : Service() {
                         }
                     } else if (cap.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
                         val result = turnOffWiregaurd()
-                        if (result) {
+                        if (notificationEnable && result) {
                             NotificationHelper.notify(
                                 getString(R.string.turn_off_wireguard_title),
                                 getString(R.string.turn_off_wireguard_scheduled_content),
@@ -63,11 +65,14 @@ class AutoSwitchWireguardService : Service() {
             override fun onAvailable(network: Network) {
                 super.onAvailable(network)
                 val cap = cm.getNetworkCapabilities(network)
+                val prefs = getSharedPreferences("config", Context.MODE_PRIVATE)
+                val notificationEnable = prefs.getBoolean("notificationEnable", false)
+
                 if (cap != null) {
                     if (cap.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
                         Log.e(TAG, "WIFI is available")
                         val result = turnOffWiregaurd()
-                        if (result) {
+                        if (notificationEnable && result) {
                             NotificationHelper.notify(
                                 getString(R.string.turn_off_wireguard_title),
                                 getString(R.string.turn_off_wireguard_content),
@@ -78,7 +83,7 @@ class AutoSwitchWireguardService : Service() {
                     } else if (cap.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
                         Log.e(TAG, "WIFI is lost")
                         val result = turnOnWireGuard()
-                        if (result) {
+                        if (notificationEnable && result) {
                             NotificationHelper.notify(
                                 getString(R.string.turn_on_wireguard_title),
                                 getString(R.string.turn_on_wireguard_content),
@@ -108,8 +113,13 @@ class AutoSwitchWireguardService : Service() {
         val ssids = prefs.getString("ssids", "")
         val ssidSet = ssids?.split(",")?.toSet()
 
-        val ssid = getWifiSsid()
-        Log.e(TAG, "ssid $ssid")
+        val wm = getSystemService(WifiManager::class.java)
+        val ci = wm.connectionInfo
+        val ssid = ci.ssid.removeSurrounding("\"")
+        Log.e(TAG, "ssid $ssid, rssi $ci.rssi")
+        if (ci.rssi < -67) {
+            return false
+        }
         if (ssidSet == null || ssidSet.isEmpty() || ssidSet.contains(ssid)) {
             for (ni in NetworkInterface.getNetworkInterfaces()) {
                 if (ni.name == "tun0") {
@@ -125,12 +135,6 @@ class AutoSwitchWireguardService : Service() {
             }
         }
         return false
-    }
-
-    private fun getWifiSsid(): String {
-        val wm = getSystemService(WifiManager::class.java)
-        val ci = wm.connectionInfo
-        return ci.ssid.removeSurrounding("\"")
     }
 
     private fun turnOnWireGuard(): Boolean {

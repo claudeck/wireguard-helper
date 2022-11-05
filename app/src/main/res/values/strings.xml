@@ -29,4 +29,5 @@ adb shell pm grant com.claudejiang.wghelper com.wireguard.android.permission.CON
     <string name="turn_on_wireguard_content">Use cellular network, turn on WireGuard.</string>
     <string name="turn_off_wireguard_content">Use wifi network, turn off WireGuard.</string>
     <string name="input_wg_name_before_switch">Please input WireGuard Name before turn on WireGuard helper.</string>
+    <string name="notificationSwitch">Enable/Disable notification</string>
 </resources>

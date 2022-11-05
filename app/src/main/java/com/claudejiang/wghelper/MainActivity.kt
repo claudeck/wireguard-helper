@@ -25,17 +25,20 @@ class MainActivity : AppCompatActivity() {
         val wgEnable = prefs.getBoolean("wgEnable", false)
         val wgName = prefs.getString("wgName", "")
         val ssids = prefs.getString("ssids", "")
+        val notificationEnable = prefs.getBoolean("notificationEnable", false)
 
         val wgEnableSwitch : SwitchMaterial = findViewById(R.id.wg_switch)
         val wgNameInput : EditText = findViewById(R.id.wg_name_input)
         val ssIdsInput : EditText = findViewById(R.id.ssids_input)
         val readme : TextView = findViewById(R.id.readme)
+        val notificationSwitch : SwitchMaterial = findViewById(R.id.notification_switch)
 
         readme.setText(Html.fromHtml(getString(R.string.readme), Html.FROM_HTML_MODE_LEGACY))
 
         wgEnableSwitch.isChecked = wgEnable
         wgNameInput.setText(wgName)
         ssIdsInput.setText(ssids)
+        notificationSwitch.isChecked = notificationEnable
 
         wgEnableSwitch.setOnCheckedChangeListener { buttonView, isChecked ->
             if (isChecked && wgNameInput.text.toString() == "") {
@@ -44,6 +47,11 @@ class MainActivity : AppCompatActivity() {
             }
 
             editor.putBoolean("wgEnable", buttonView.isChecked)
+            editor.apply()
+        }
+
+        notificationSwitch.setOnCheckedChangeListener { buttonView, isChecked ->
+            editor.putBoolean("notificationEnable", buttonView.isChecked)
             editor.apply()
         }
 

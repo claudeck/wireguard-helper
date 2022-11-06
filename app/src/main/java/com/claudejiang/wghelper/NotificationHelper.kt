@@ -8,16 +8,18 @@ import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 
 object NotificationHelper {
-    val CHANNEL_ID = "normal"
+    const val CHANNEL_ID = "normal"
 
-    val notificationIdGenerator = AtomicInteger(0)
+    private val notificationIdGenerator = AtomicInteger(0)
 
-    fun notify(title : String, content : String, context: Context, nm : NotificationManager) {
+    fun notify(title: String, content: String, context: Context, nm: NotificationManager) {
         val time = Date()
-        val timeStr = SimpleDateFormat("HH:mm:ss").format(time)
-        val notification = NotificationCompat.Builder(context, NotificationHelper.CHANNEL_ID)
+        SimpleDateFormat.getTimeInstance()
+        val timeStr =
+            SimpleDateFormat("HH:mm:ss", Locale.getDefault(Locale.Category.FORMAT)).format(time)
+        val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setContentTitle(title)
-            .setContentText("${timeStr}: ${content}")
+            .setContentText("$timeStr: $content")
             .setSmallIcon(R.mipmap.ic_launcher)
             .build()
 

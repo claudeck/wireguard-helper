@@ -23,10 +23,10 @@
     <string name="switch_desc">启用/停用WireGuard助手</string>
     <string name="turn_on_wireguard_title">打开WireGuard</string>
     <string name="turn_off_wireguard_title">关闭WireGuard</string>
-    <string name="turn_on_wireguard_scheduled_content">检查到当前使用手机网络，定时任务帮你开启WireGuard.</string>
-    <string name="turn_off_wireguard_scheduled_content">检查到当前使用Wifi，定时任务帮你关闭WireGuard.</string>
-    <string name="turn_on_wireguard_content">检查到当前使用手机网络，立刻帮你开启WireGuard.</string>
-    <string name="turn_off_wireguard_content">检查到当前使用Wifi，立刻帮你关闭WireGuard.</string>
+    <string name="turn_on_wireguard_scheduled_content">检查到当前使用手机网络，通过定时任务开启WireGuard.</string>
+    <string name="turn_off_wireguard_scheduled_content">检查到当前使用Wifi，通过定时任务关闭WireGuard.</string>
+    <string name="turn_on_wireguard_content">检查到当前使用手机网络，开启WireGuard.</string>
+    <string name="turn_off_wireguard_content">检查到当前使用Wifi，关闭WireGuard.</string>
     <string name="input_wg_name_before_switch">请输入WireGuard Name，然后在激活服务</string>
     <string name="notificationSwitch">开启/停用通知</string>
 </resources>

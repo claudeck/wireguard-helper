@@ -14,94 +14,74 @@ import java.net.NetworkInterface
 
 class AutoSwitchWireguardService : Service() {
 
-    val TAG = AutoSwitchWireguardService::class.java.simpleName
+    private val tag = AutoSwitchWireguardService::class.java.simpleName
 
     override fun onCreate() {
         super.onCreate()
 
         val cm = getSystemService(ConnectivityManager::class.java)
-        val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-        Thread {
-            while (true) {
-                try {
-                    Thread.sleep(5 * 60 * 1000)
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
+//        Thread {
+//            while (true) {
+//                try {
+//                    Thread.sleep(5 * 60 * 1000)
+//                } catch (e: Exception) {
+//                    e.printStackTrace()
+//                }
+//
+//                val activeNetwork = cm.activeNetwork
+//                if (activeNetwork != null) {
+//                    handleWireGuardByNetworkStatus(activeNetwork, SCHEDULED_MODE)
+//                }
+//            }
+//        }.start()
 
-                val cap = cm.getNetworkCapabilities(cm.activeNetwork)
-                val prefs = getSharedPreferences("config", Context.MODE_PRIVATE)
-                val notificationEnable = prefs.getBoolean("notificationEnable", false)
-
-                if (cap != null) {
-                    if (cap.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
-                        val result = turnOnWireGuard()
-                        if (notificationEnable && result) {
-                            NotificationHelper.notify(
-                                getString(R.string.turn_on_wireguard_title),
-                                getString(R.string.turn_on_wireguard_scheduled_content),
-                                this,
-                                nm
-                            )
-                        }
-                    } else if (cap.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
-                        val result = turnOffWiregaurd()
-                        if (notificationEnable && result) {
-                            NotificationHelper.notify(
-                                getString(R.string.turn_off_wireguard_title),
-                                getString(R.string.turn_off_wireguard_scheduled_content),
-                                this,
-                                nm
-                            )
-                        }
-                    }
-                }
-            }
-        }.start()
-
-        val context = this
         cm.registerDefaultNetworkCallback(object : ConnectivityManager.NetworkCallback() {
             override fun onAvailable(network: Network) {
                 super.onAvailable(network)
-                val cap = cm.getNetworkCapabilities(network)
-                val prefs = getSharedPreferences("config", Context.MODE_PRIVATE)
-                val notificationEnable = prefs.getBoolean("notificationEnable", false)
-
-                if (cap != null) {
-                    if (cap.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
-                        Log.e(TAG, "WIFI is available")
-                        val result = turnOffWiregaurd()
-                        if (notificationEnable && result) {
-                            NotificationHelper.notify(
-                                getString(R.string.turn_off_wireguard_title),
-                                getString(R.string.turn_off_wireguard_content),
-                                context,
-                                nm
-                            )
-                        }
-                    } else if (cap.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
-                        Log.e(TAG, "WIFI is lost")
-                        val result = turnOnWireGuard()
-                        if (notificationEnable && result) {
-                            NotificationHelper.notify(
-                                getString(R.string.turn_on_wireguard_title),
-                                getString(R.string.turn_on_wireguard_content),
-                                context,
-                                nm
-                            )
-                        }
-                    }
-                }
+                handleWireGuardByNetworkStatus(network)
             }
         })
+    }
+
+    private fun handleWireGuardByNetworkStatus(network: Network) {
+        val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val cm = getSystemService(ConnectivityManager::class.java)
+
+        val cap = cm.getNetworkCapabilities(network)
+        val prefs = getSharedPreferences("config", MODE_PRIVATE)
+        val notificationEnable = prefs.getBoolean("notificationEnable", false)
+
+        if (cap != null) {
+            if (cap.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) && connectedToWireGuard()) {
+                val result = turnOffWireguard(3)
+                if (notificationEnable && result) {
+                    NotificationHelper.notify(
+                        getString(R.string.turn_off_wireguard_title),
+                        getString(R.string.turn_off_wireguard_content),
+                        this,
+                        nm
+                    )
+                }
+            } else if (cap.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) && !connectedToWireGuard()) {
+                val result = turnOnWireGuard()
+                if (notificationEnable && result) {
+                    NotificationHelper.notify(
+                        getString(R.string.turn_on_wireguard_title),
+                        getString(R.string.turn_on_wireguard_content),
+                        this,
+                        nm
+                    )
+                }
+            }
+        }
     }
 
     override fun onBind(intent: Intent?): IBinder? {
         TODO("Not yet implemented")
     }
 
-    private fun turnOffWiregaurd(): Boolean {
+    private fun turnOffWireguard(retry: Int): Boolean {
         val prefs = getSharedPreferences("config", Context.MODE_PRIVATE)
         val wgEnable = prefs.getBoolean("wgEnable", false)
         val wgName = prefs.getString("wgName", "")
@@ -116,22 +96,41 @@ class AutoSwitchWireguardService : Service() {
         val wm = getSystemService(WifiManager::class.java)
         val ci = wm.connectionInfo
         val ssid = ci.ssid.removeSurrounding("\"")
-        Log.e(TAG, "ssid $ssid, rssi $ci.rssi")
+        Log.e(tag, "ssid $ssid, rssi $ci.rssi")
+        // If wifi strength is low, retry turn off after 10s.
         if (ci.rssi < -67) {
+            try {
+                Thread.sleep(10000)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+            val cm = getSystemService(ConnectivityManager::class.java)
+            val cap = cm.getNetworkCapabilities(cm.activeNetwork)
+            if (cap != null) {
+                if (cap.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) && connectedToWireGuard()) {
+                    Log.e(tag, "Retry turn off $retry countdown")
+                    return turnOffWireguard(retry - 1)
+                }
+            }
             return false
         }
         if (ssidSet == null || ssidSet.isEmpty() || ssidSet.contains(ssid)) {
-            for (ni in NetworkInterface.getNetworkInterfaces()) {
-                if (ni.name == "tun0") {
-                    Log.e(TAG, "turn off the wireguard")
-                    val sendIntent: Intent = Intent().apply {
-                        `package` = "com.wireguard.android"
-                        action = "com.wireguard.android.action.SET_TUNNEL_DOWN"
-                        putExtra("tunnel", wgName)
-                    }
-                    sendBroadcast(sendIntent)
-                    return true
-                }
+            Log.e(tag, "turn off the wireguard")
+            val sendIntent: Intent = Intent().apply {
+                `package` = "com.wireguard.android"
+                action = "com.wireguard.android.action.SET_TUNNEL_DOWN"
+                putExtra("tunnel", wgName)
+            }
+            sendBroadcast(sendIntent)
+            return true
+        }
+        return false
+    }
+
+    private fun connectedToWireGuard(): Boolean {
+        for (ni in NetworkInterface.getNetworkInterfaces()) {
+            if (ni.name == "tun0") {
+                return true
             }
         }
         return false
@@ -146,26 +145,14 @@ class AutoSwitchWireguardService : Service() {
             return false
         }
 
-        var hasTun0 = false
-        for (ni in NetworkInterface.getNetworkInterfaces()) {
-            if (ni.name == "tun0") {
-                hasTun0 = true
-                break
-            }
+        Log.e(tag, "turn on the wireguard")
+        val sendIntent: Intent = Intent().apply {
+            `package` = "com.wireguard.android"
+            action = "com.wireguard.android.action.SET_TUNNEL_UP"
+            putExtra("tunnel", wgName)
         }
-        if (!hasTun0) {
-            Log.e(TAG, "turn on the wireguard")
-            val sendIntent: Intent = Intent().apply {
-                `package` = "com.wireguard.android"
-                action = "com.wireguard.android.action.SET_TUNNEL_UP"
-                putExtra("tunnel", wgName)
-            }
-            sendBroadcast(sendIntent)
-            return true
-        } else {
-            Log.e(TAG, "VPN is alive.")
-        }
-        return false
+        sendBroadcast(sendIntent)
+        return true
     }
 
 }

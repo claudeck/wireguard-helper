@@ -1,20 +1,19 @@
 package com.claudejiang.wghelper
 
 import android.content.Context
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.text.Html
 import android.util.Log
 import android.widget.EditText
-import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.addTextChangedListener
 import com.google.android.material.switchmaterial.SwitchMaterial
 
 class MainActivity : AppCompatActivity() {
 
-    private val TAG = MainActivity::class.java.simpleName
+    private val tag = MainActivity::class.java.simpleName
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,13 +26,13 @@ class MainActivity : AppCompatActivity() {
         val ssids = prefs.getString("ssids", "")
         val notificationEnable = prefs.getBoolean("notificationEnable", false)
 
-        val wgEnableSwitch : SwitchMaterial = findViewById(R.id.wg_switch)
-        val wgNameInput : EditText = findViewById(R.id.wg_name_input)
-        val ssIdsInput : EditText = findViewById(R.id.ssids_input)
-        val readme : TextView = findViewById(R.id.readme)
-        val notificationSwitch : SwitchMaterial = findViewById(R.id.notification_switch)
+        val wgEnableSwitch: SwitchMaterial = findViewById(R.id.wg_switch)
+        val wgNameInput: EditText = findViewById(R.id.wg_name_input)
+        val ssIdsInput: EditText = findViewById(R.id.ssids_input)
+        val readme: TextView = findViewById(R.id.readme)
+        val notificationSwitch: SwitchMaterial = findViewById(R.id.notification_switch)
 
-        readme.setText(Html.fromHtml(getString(R.string.readme), Html.FROM_HTML_MODE_LEGACY))
+        readme.text = Html.fromHtml(getString(R.string.readme), Html.FROM_HTML_MODE_LEGACY)
 
         wgEnableSwitch.isChecked = wgEnable
         wgNameInput.setText(wgName)
@@ -42,7 +41,11 @@ class MainActivity : AppCompatActivity() {
 
         wgEnableSwitch.setOnCheckedChangeListener { buttonView, isChecked ->
             if (isChecked && wgNameInput.text.toString() == "") {
-                Toast.makeText(this, getString(R.string.input_wg_name_before_switch), Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    this,
+                    getString(R.string.input_wg_name_before_switch),
+                    Toast.LENGTH_SHORT
+                ).show()
                 buttonView.isChecked = false
             }
 
@@ -50,13 +53,13 @@ class MainActivity : AppCompatActivity() {
             editor.apply()
         }
 
-        notificationSwitch.setOnCheckedChangeListener { buttonView, isChecked ->
+        notificationSwitch.setOnCheckedChangeListener { buttonView, _ ->
             editor.putBoolean("notificationEnable", buttonView.isChecked)
             editor.apply()
         }
 
         wgNameInput.addTextChangedListener {
-            Log.d(TAG, "wgName changed")
+            Log.d(tag, "wgName changed")
             editor.putString("wgName", wgNameInput.text.toString())
             editor.apply()
         }

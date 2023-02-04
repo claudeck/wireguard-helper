@@ -53,17 +53,25 @@ class AutoSwitchWireguardService : Service() {
         val notificationEnable = prefs.getBoolean("notificationEnable", false)
 
         if (cap != null) {
-            if (cap.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) && connectedToWireGuard()) {
-                val result = turnOffWireguard(3)
-                if (notificationEnable && result) {
-                    NotificationHelper.notify(
-                        getString(R.string.turn_off_wireguard_title),
-                        getString(R.string.turn_off_wireguard_content),
-                        this,
-                        nm
-                    )
+            val connectedWg = connectedToWireGuard()
+            Log.e(tag, "wifi:" + cap.hasTransport(NetworkCapabilities.TRANSPORT_WIFI))
+            Log.e(tag, "cellular:" + cap.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR))
+            Log.e(tag, "wg connect status:$connectedWg")
+            if (cap.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+                if (connectedWg) {
+                    val result = turnOffWireguard(3)
+                    if (notificationEnable && result) {
+                        NotificationHelper.notify(
+                            getString(R.string.turn_off_wireguard_title),
+                            getString(R.string.turn_off_wireguard_content),
+                            this,
+                            nm
+                        )
+                    }
                 }
-            } else if (cap.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) && !connectedToWireGuard()) {
+                return
+            }
+            if (cap.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) && !connectedWg) {
                 val result = turnOnWireGuard()
                 if (notificationEnable && result) {
                     NotificationHelper.notify(
@@ -129,7 +137,12 @@ class AutoSwitchWireguardService : Service() {
 
     private fun connectedToWireGuard(): Boolean {
         for (ni in NetworkInterface.getNetworkInterfaces()) {
-            if (ni.name == "tun0") {
+            Log.e(tag, "iface:" + ni.name)
+            Log.e(tag, "iface status:" + ni.isUp)
+//            for (ia in ni.interfaceAddresses) {
+//                Log.e(tag, "iface addr:" + ia.address.hostAddress)
+//            }
+            if (ni.name.startsWith("tun") && ni.isUp) {
                 return true
             }
         }

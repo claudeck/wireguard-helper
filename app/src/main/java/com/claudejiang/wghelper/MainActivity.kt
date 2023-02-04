@@ -3,6 +3,7 @@ package com.claudejiang.wghelper
 import android.content.Context
 import android.os.Bundle
 import android.text.Html
+import android.text.method.LinkMovementMethod
 import android.util.Log
 import android.widget.EditText
 import android.widget.TextView
@@ -33,6 +34,7 @@ class MainActivity : AppCompatActivity() {
         val notificationSwitch: SwitchMaterial = findViewById(R.id.notification_switch)
 
         readme.text = Html.fromHtml(getString(R.string.readme), Html.FROM_HTML_MODE_LEGACY)
+        readme.movementMethod = LinkMovementMethod.getInstance()
 
         wgEnableSwitch.isChecked = wgEnable
         wgNameInput.setText(wgName)

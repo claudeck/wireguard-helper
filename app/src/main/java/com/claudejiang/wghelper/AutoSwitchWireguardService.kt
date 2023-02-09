@@ -54,9 +54,9 @@ class AutoSwitchWireguardService : Service() {
 
         if (cap != null) {
             val connectedWg = connectedToWireGuard()
-            Log.e(tag, "wifi:" + cap.hasTransport(NetworkCapabilities.TRANSPORT_WIFI))
-            Log.e(tag, "cellular:" + cap.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR))
-            Log.e(tag, "wg connect status:$connectedWg")
+            Log.e(tag, "wifi: " + cap.hasTransport(NetworkCapabilities.TRANSPORT_WIFI))
+            Log.e(tag, "cellular: " + cap.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR))
+            Log.e(tag, "wg connect status: $connectedWg")
             if (cap.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
                 if (connectedWg) {
                     val result = turnOffWireguard(3)
@@ -71,7 +71,17 @@ class AutoSwitchWireguardService : Service() {
                 }
                 return
             }
-            if (cap.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) && !connectedWg) {
+            val connectedWlan = connectedToWlan()
+            Log.e(tag, "wlan connect status: $connectedWlan")
+            if (!connectedWlan && cap.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) && !connectedWg) {
+                try {
+                    Thread.sleep(2000)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+                if (connectedToWlan()) {
+                    return
+                }
                 val result = turnOnWireGuard()
                 if (notificationEnable && result) {
                     NotificationHelper.notify(
@@ -137,12 +147,22 @@ class AutoSwitchWireguardService : Service() {
 
     private fun connectedToWireGuard(): Boolean {
         for (ni in NetworkInterface.getNetworkInterfaces()) {
-            Log.e(tag, "iface:" + ni.name)
-            Log.e(tag, "iface status:" + ni.isUp)
-//            for (ia in ni.interfaceAddresses) {
-//                Log.e(tag, "iface addr:" + ia.address.hostAddress)
-//            }
+            // any tun device is up
+            Log.e(tag, "network interface name: " + ni.name)
+            Log.e(tag, "network interface status: " + ni.isUp)
+            for (ia in ni.interfaceAddresses) {
+                Log.e(tag, "network interface address: ${ia.toString()}")
+            }
             if (ni.name.startsWith("tun") && ni.isUp) {
+                return true
+            }
+        }
+        return false
+    }
+
+    private fun connectedToWlan(): Boolean {
+        for (ni in NetworkInterface.getNetworkInterfaces()) {
+            if (ni.name.startsWith("wlan") && ni.isUp) {
                 return true
             }
         }
